@@ -36,7 +36,6 @@ const logInWithEmailAndPassword = async (email, password) => {
     await signInWithEmailAndPassword(auth, email, password);
     alert('Sign in success');
   } catch (err) {
-    console.error(err);
     alert(err.message);
   }
 };
@@ -46,7 +45,6 @@ const createUserInFirebase = async (email, password) => {
     const user = await createUserWithEmailAndPassword(auth, email, password);
     return user;
   } catch (err) {
-    console.log(err);
     alert(err.message);
     return err;
   }
@@ -58,7 +56,6 @@ const createUserInDB = async userObject => {
     // const res = await WMKBackend.post('/register/create', userObject);
     // return res;
   } catch (err) {
-    console.log(err);
     const { email, password } = userObject;
 
     // since this route is called after user is created in firebase, if this
@@ -76,7 +73,6 @@ const registerWithEmailAndPassword = async (email, password) => {
     createUserInFirebase(email, password);
     createUserInDB({ email, password });
   } catch (err) {
-    console.error(err);
     alert(err.message);
   }
 };

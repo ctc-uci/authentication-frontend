@@ -14,6 +14,8 @@ const Register = () => {
       alert("Passwords don't match");
     } else {
       registerWithEmailAndPassword(email, password);
+
+      // Replace path below with main page after login.
       navigate('/');
     }
   };
