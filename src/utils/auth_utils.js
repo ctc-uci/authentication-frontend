@@ -29,7 +29,6 @@ const signInWithGoogle = async () => {
 const logInWithEmailAndPassword = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    alert('Sign in success');
   } catch (err) {
     console.error(err);
     alert(err.message);
@@ -44,8 +43,8 @@ const sendPasswordReset = async () => {
   // TODO
 };
 
-const logout = () => {
-  signOut(auth);
+const logout = async () => {
+  await signOut(auth);
 };
 
 export {
