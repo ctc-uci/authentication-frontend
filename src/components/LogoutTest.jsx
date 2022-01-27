@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { logout } from '../utils/auth_utils';
+import { withCookies } from 'react-cookie';
+import { logout, useNavigate } from '../utils/auth_utils';
 
 const LogoutTest = () => {
   const navigate = useNavigate();
@@ -25,4 +25,4 @@ const LogoutTest = () => {
   );
 };
 
-export default LogoutTest;
+export default withCookies(LogoutTest);

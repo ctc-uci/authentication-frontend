@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, logInWithEmailAndPassword } from '../utils/auth_utils';
+import { withCookies, Cookies } from 'react-cookie';
+import { instanceOf } from 'prop-types';
+import { auth, logInWithEmailAndPassword, useAuthState, useNavigate } from '../utils/auth_utils';
 
-const LoginTest = () => {
+const LoginTest = ({ cookies }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [user, loading, error] = useAuthState(auth);
+
+  const cookieConfig = {
+    maxAge: 3600,
+    path: '/',
+  };
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -18,7 +23,7 @@ const LoginTest = () => {
     if (loading || error) return;
     if (user) {
       navigate('/logout');
-      // cookies.set('accessToken', user.accessToken, cookieConfig);
+      cookies.set('accessToken', user.accessToken, cookieConfig);
     }
   }, [user, loading]);
   return (
@@ -35,4 +40,8 @@ const LoginTest = () => {
   );
 };
 
-export default LoginTest;
+LoginTest.propTypes = {
+  cookies: instanceOf(Cookies).isRequired,
+};
+
+export default withCookies(LoginTest);

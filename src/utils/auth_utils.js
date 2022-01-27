@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useNavigate } from 'react-router-dom';
 
 // Other useful imports from 'firebase/auth':
 // - GoogleAuthProvider
@@ -49,6 +51,8 @@ const logout = async () => {
 
 export {
   auth,
+  useAuthState,
+  useNavigate,
   signInWithGoogle,
   logInWithEmailAndPassword,
   registerWithEmailAndPassword,
