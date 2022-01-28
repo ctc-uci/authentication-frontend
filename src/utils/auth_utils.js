@@ -37,8 +37,6 @@ const signInWithGoogle = async () => {
 
     return getAdditionalUserInfo(userCredential).isNewUser;
   } catch (err) {
-    console.error(err);
-    alert(err.message);
     return err;
   }
 };
@@ -48,8 +46,6 @@ const logInWithEmailAndPassword = async (email, password) => {
     await signInWithEmailAndPassword(auth, email, password);
     return true;
   } catch (err) {
-    console.error(err);
-    alert(err.message);
     return false;
   }
 };
