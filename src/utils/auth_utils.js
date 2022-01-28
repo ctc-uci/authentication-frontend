@@ -3,6 +3,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signOut,
 } from 'firebase/auth';
 
@@ -27,10 +28,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const signInWithGoogle = async () => {
-  // TODO
-};
-
 const logInWithEmailAndPassword = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
@@ -43,6 +40,7 @@ const logInWithEmailAndPassword = async (email, password) => {
 const createUserInFirebase = async (email, password) => {
   try {
     const user = await createUserWithEmailAndPassword(auth, email, password);
+    sendEmailVerification(user.user);
     return user;
   } catch (err) {
     alert(err.message);
@@ -68,10 +66,15 @@ const createUserInDB = async userObject => {
   }
 };
 
+const signInWithGoogle = () => {};
+
 const registerWithEmailAndPassword = async (email, password) => {
   try {
     createUserInFirebase(email, password);
     createUserInDB({ email, password });
+
+    const user = auth.currentUser;
+    console.log(user.emailVerified);
   } catch (err) {
     alert(err.message);
   }

@@ -39,6 +39,11 @@ const Register = () => {
         />
         <br />
         <button type="submit">Register</button>
+        <div className="login-buttons">
+          <button type="button">
+            <span>Sign Up With Google</span>
+          </button>
+        </div>
       </form>
     </div>
   );
