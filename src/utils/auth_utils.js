@@ -1,6 +1,12 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  getAdditionalUserInfo,
+} from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 
 // Other useful imports from 'firebase/auth':
@@ -25,15 +31,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const signInWithGoogle = async () => {
-  // TODO
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+
+    return getAdditionalUserInfo(userCredential).isNewUser;
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+    return err;
+  }
 };
 
 const logInWithEmailAndPassword = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    return true;
   } catch (err) {
     console.error(err);
     alert(err.message);
+    return false;
   }
 };
 
@@ -51,7 +68,6 @@ const logout = async () => {
 
 export {
   auth,
-  useAuthState,
   useNavigate,
   signInWithGoogle,
   logInWithEmailAndPassword,

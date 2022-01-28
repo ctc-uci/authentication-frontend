@@ -1,18 +1,14 @@
 import React from 'react';
-import { withCookies } from 'react-cookie';
+import { instanceOf } from 'prop-types';
 import { logout, useNavigate } from '../utils/auth_utils';
+import { clearCookies, Cookies, withCookies } from '../utils/cookie_utils';
 
-const LogoutTest = () => {
+const LogoutTest = ({ cookies }) => {
   const navigate = useNavigate();
-
-  const deleteCookie = name => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  };
-
   const handleSubmit = async () => {
     await logout();
     navigate('/');
-    deleteCookie('accessToken');
+    clearCookies(cookies);
   };
 
   return (
@@ -23,6 +19,10 @@ const LogoutTest = () => {
       </button>
     </div>
   );
+};
+
+LogoutTest.propTypes = {
+  cookies: instanceOf(Cookies).isRequired,
 };
 
 export default withCookies(LogoutTest);

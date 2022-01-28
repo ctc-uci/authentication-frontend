@@ -1,31 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { withCookies, Cookies } from 'react-cookie';
+import React, { useState } from 'react';
 import { instanceOf } from 'prop-types';
-import { auth, logInWithEmailAndPassword, useAuthState, useNavigate } from '../utils/auth_utils';
+import { cookieConfig, cookieKeys, Cookies, withCookies } from '../utils/cookie_utils';
+import {
+  auth,
+  logInWithEmailAndPassword,
+  useNavigate,
+  signInWithGoogle,
+} from '../utils/auth_utils';
 
 const LoginTest = ({ cookies }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
-  const [user, loading, error] = useAuthState(auth);
 
-  const cookieConfig = {
-    maxAge: 3600,
-    path: '/',
-  };
-
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    logInWithEmailAndPassword(email, password);
+    const success = await logInWithEmailAndPassword(email, password);
+    if (success) {
+      navigate('/logout');
+      cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+    } else {
+      navigate('/');
+    }
   };
 
-  useEffect(() => {
-    if (loading || error) return;
-    if (user) {
-      navigate('/logout');
-      cookies.set('accessToken', user.accessToken, cookieConfig);
+  const handleGoogleSignIn = async () => {
+    const newUser = await signInWithGoogle();
+    switch (newUser) {
+      case true:
+        navigate('/new-user');
+        cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+        break;
+      case false:
+        navigate('/logout');
+        cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+        break;
+      default:
+        navigate('/');
     }
-  }, [user, loading]);
+  };
+
   return (
     <div>
       <h2>Login</h2>
@@ -36,6 +50,9 @@ const LoginTest = ({ cookies }) => {
         <br />
         <button type="submit">Sign in</button>
       </form>
+      <button type="submit" onClick={handleGoogleSignIn}>
+        Sign in with Google
+      </button>
     </div>
   );
 };
