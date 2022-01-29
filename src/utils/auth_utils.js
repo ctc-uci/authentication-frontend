@@ -30,6 +30,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+/**
+ * Signs a user in with Google using Firebase
+ * @returns A boolean indicating whether or not the user is new
+ */
 const signInWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
@@ -41,6 +45,12 @@ const signInWithGoogle = async () => {
   }
 };
 
+/**
+ *
+ * @param {string} email The email to log in with
+ * @param {string} password The password to log in with
+ * @returns A boolean indicating whether or not the log in was successful
+ */
 const logInWithEmailAndPassword = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
@@ -58,6 +68,9 @@ const sendPasswordReset = async () => {
   // TODO
 };
 
+/**
+ * Logs a user out
+ */
 const logout = async () => {
   await signOut(auth);
 };

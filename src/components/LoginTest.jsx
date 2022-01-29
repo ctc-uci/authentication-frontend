@@ -13,6 +13,11 @@ const LoginTest = ({ cookies }) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
 
+  /**
+   * This function handles logging in with email/password (standard log in)
+   * If the user signs in successfully, they are redirected to /logout, otherwise they are redirected to the login screen
+   * @param {Event} e
+   */
   const handleSubmit = async e => {
     e.preventDefault();
     const success = await logInWithEmailAndPassword(email, password);
@@ -24,6 +29,12 @@ const LoginTest = ({ cookies }) => {
     }
   };
 
+  /**
+   * This function handles logging in with Google
+   * If the user logs in and is new, they are directed to a new-user path
+   * If the user logs in and isn't new, they are directed to the dashboard.
+   * If the user fails to log in, they are directed back to the login screen
+   */
   const handleGoogleSignIn = async () => {
     const newUser = await signInWithGoogle();
     switch (newUser) {
