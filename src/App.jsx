@@ -3,8 +3,8 @@ import { Route, Routes, BrowserRouter as Router } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 import './App.css';
 
-import LoginTest from './components/LoginTest';
-import LogoutTest from './components/LogoutTest';
+import LoginTest from './components/Login';
+import LogoutTest from './components/Logout';
 
 function App() {
   return (

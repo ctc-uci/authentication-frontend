@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { instanceOf } from 'prop-types';
-import { cookieConfig, cookieKeys, Cookies, withCookies } from '../utils/cookie_utils';
-import {
-  auth,
-  logInWithEmailAndPassword,
-  useNavigate,
-  signInWithGoogle,
-} from '../utils/auth_utils';
+import { Cookies, withCookies } from '../utils/cookie_utils';
+import { logInWithEmailAndPassword, signInWithGoogle, useNavigate } from '../utils/auth_utils';
 
-const LoginTest = ({ cookies }) => {
+const Login = ({ cookies }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
+  const [errorMessage, setErrorMessage] = useState();
 
   /**
    * This function handles logging in with email/password (standard log in)
@@ -19,13 +15,11 @@ const LoginTest = ({ cookies }) => {
    * @param {Event} e
    */
   const handleSubmit = async e => {
-    e.preventDefault();
-    const success = await logInWithEmailAndPassword(email, password);
-    if (success) {
-      navigate('/logout');
-      cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-    } else {
-      navigate('/');
+    try {
+      e.preventDefault();
+      await logInWithEmailAndPassword(email, password, '/logout', navigate, cookies);
+    } catch (err) {
+      setErrorMessage(err.message);
     }
   };
 
@@ -35,25 +29,19 @@ const LoginTest = ({ cookies }) => {
    * If the user logs in and isn't new, they are directed to the dashboard.
    * If the user fails to log in, they are directed back to the login screen
    */
-  const handleGoogleSignIn = async () => {
-    const newUser = await signInWithGoogle();
-    switch (newUser) {
-      case true:
-        navigate('/new-user');
-        cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-        break;
-      case false:
-        navigate('/logout');
-        cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-        break;
-      default:
-        navigate('/');
+  const handleGoogleSignIn = async e => {
+    try {
+      e.preventDefault();
+      await signInWithGoogle('/new-user', '/logout', navigate, cookies);
+    } catch (err) {
+      setErrorMessage(err.message);
     }
   };
 
   return (
     <div>
       <h2>Login</h2>
+      {errorMessage && <p>{errorMessage}</p>}
       <form onSubmit={handleSubmit}>
         <input type="text" onChange={({ target }) => setEmail(target.value)} placeholder="Email" />
         <br />
@@ -68,8 +56,8 @@ const LoginTest = ({ cookies }) => {
   );
 };
 
-LoginTest.propTypes = {
+Login.propTypes = {
   cookies: instanceOf(Cookies).isRequired,
 };
 
-export default withCookies(LoginTest);
+export default withCookies(Login);
