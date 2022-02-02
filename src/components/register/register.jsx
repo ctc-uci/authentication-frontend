@@ -15,7 +15,6 @@ const Register = () => {
       await registerWithEmailAndPassword(email, password, checkPassword, navigate, '/');
     } catch (error) {
       setErrorMessage(error.message);
-      console.log(errorMessage);
     }
   };
 
@@ -44,6 +43,7 @@ const Register = () => {
           </button>
         </div>
       </form>
+      <p>{errorMessage}</p>
     </div>
   );
 };
