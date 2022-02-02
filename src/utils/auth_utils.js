@@ -43,8 +43,7 @@ const createUserInFirebase = async (email, password) => {
     sendEmailVerification(user.user);
     return user;
   } catch (err) {
-    alert(err.message);
-    return err;
+    throw new Error(err.message);
   }
 };
 
@@ -56,27 +55,42 @@ const createUserInDB = async userObject => {
   } catch (err) {
     const { email, password } = userObject;
 
-    // since this route is called after user is created in firebase, if this
+    // Since this route is called after user is created in firebase, if this
     // route errors out, that means we have to discard the created firebase object
     await signInWithEmailAndPassword(auth, email, password);
     const userToBeTerminated = await auth.currentUser;
     userToBeTerminated.delete();
 
-    throw new Error(err);
+    throw new Error(err.message);
+  }
+};
+
+const createUser = async (email, password) => {
+  try {
+    await createUserInFirebase(email, password);
+    createUserInDB({ email, password });
+  } catch (err) {
+    throw new Error(err.message);
   }
 };
 
 const signInWithGoogle = () => {};
 
-const registerWithEmailAndPassword = async (email, password) => {
+const registerWithEmailAndPassword = async (
+  email,
+  password,
+  checkPassword,
+  navigate,
+  redirectPath,
+) => {
   try {
-    createUserInFirebase(email, password);
-    createUserInDB({ email, password });
-
-    const user = auth.currentUser;
-    console.log(user.emailVerified);
-  } catch (err) {
-    alert(err.message);
+    if (password !== checkPassword) {
+      throw new Error("Passwords don't match");
+    }
+    await createUser(email, password);
+    navigate(redirectPath);
+  } catch (error) {
+    throw new Error(error);
   }
 };
 

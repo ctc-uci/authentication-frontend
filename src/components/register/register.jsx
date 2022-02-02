@@ -6,17 +6,16 @@ const Register = () => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [checkPassword, setCheckPassword] = useState();
+  const [errorMessage, setErrorMessage] = useState();
   const navigate = useNavigate();
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (password !== checkPassword) {
-      alert("Passwords don't match");
-    } else {
-      registerWithEmailAndPassword(email, password);
-
-      // Replace path below with main page after login.
-      navigate('/');
+    try {
+      await registerWithEmailAndPassword(email, password, checkPassword, navigate, '/');
+    } catch (error) {
+      setErrorMessage(error.message);
+      console.log(errorMessage);
     }
   };
 
