@@ -6,6 +6,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   getAdditionalUserInfo,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
@@ -62,8 +64,46 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
 };
 
-const registerWithEmailAndPassword = async () => {
-  // TODO
+const createUserInFirebase = async (email, password) => {
+  const user = await createUserWithEmailAndPassword(auth, email, password);
+  sendEmailVerification(user.user);
+};
+
+const createUserInDB = async userObject => {
+  try {
+    // Replace line below with call to NPO DB
+    // const res = await WMKBackend.post('/register/create', userObject);
+    // return res;
+  } catch (err) {
+    const { email, password } = userObject;
+
+    // Since this route is called after user is created in firebase, if this
+    // route errors out, that means we have to discard the created firebase object
+    await signInWithEmailAndPassword(auth, email, password);
+    const userToBeTerminated = await auth.currentUser;
+    userToBeTerminated.delete();
+
+    throw new Error(err.message);
+  }
+};
+
+const createUser = async (email, password) => {
+  await createUserInFirebase(email, password);
+  createUserInDB({ email, password });
+};
+
+const registerWithEmailAndPassword = async (
+  email,
+  password,
+  checkPassword,
+  navigate,
+  redirectPath,
+) => {
+  if (password !== checkPassword) {
+    throw new Error("Passwords don't match");
+  }
+  await createUser(email, password);
+  navigate(redirectPath);
 };
 
 const sendPasswordReset = async () => {
