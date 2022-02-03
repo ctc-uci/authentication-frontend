@@ -38,13 +38,8 @@ const logInWithEmailAndPassword = async (email, password) => {
 };
 
 const createUserInFirebase = async (email, password) => {
-  try {
-    const user = await createUserWithEmailAndPassword(auth, email, password);
-    sendEmailVerification(user.user);
-    return user;
-  } catch (err) {
-    throw new Error(err.message);
-  }
+  const user = await createUserWithEmailAndPassword(auth, email, password);
+  sendEmailVerification(user.user);
 };
 
 const createUserInDB = async userObject => {
@@ -66,12 +61,8 @@ const createUserInDB = async userObject => {
 };
 
 const createUser = async (email, password) => {
-  try {
-    await createUserInFirebase(email, password);
-    createUserInDB({ email, password });
-  } catch (err) {
-    throw new Error(err.message);
-  }
+  await createUserInFirebase(email, password);
+  createUserInDB({ email, password });
 };
 
 const signInWithGoogle = () => {};
@@ -83,15 +74,11 @@ const registerWithEmailAndPassword = async (
   navigate,
   redirectPath,
 ) => {
-  try {
-    if (password !== checkPassword) {
-      throw new Error("Passwords don't match");
-    }
-    await createUser(email, password);
-    navigate(redirectPath);
-  } catch (error) {
-    throw new Error(error);
+  if (password !== checkPassword) {
+    throw new Error("Passwords don't match");
   }
+  await createUser(email, password);
+  navigate(redirectPath);
 };
 
 const sendPasswordReset = async () => {
