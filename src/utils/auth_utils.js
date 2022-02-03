@@ -92,8 +92,6 @@ const createUser = async (email, password) => {
   createUserInDB({ email, password });
 };
 
-const signInWithGoogle = () => {};
-
 const registerWithEmailAndPassword = async (
   email,
   password,
