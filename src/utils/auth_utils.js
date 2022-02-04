@@ -69,7 +69,7 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   const userCredential = await signInWithPopup(auth, provider);
   const newUser = getAdditionalUserInfo(userCredential).isNewUser;
   if (newUser) {
-    createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
+    await createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
     navigate(newUserRedirectPath);
   } else {
     navigate(defaultRedirectPath);
@@ -102,7 +102,7 @@ const createUserInFirebase = async (email, password) => {
 
 const createUser = async (email, role, password) => {
   const userId = await createUserInFirebase(email, password);
-  createUserInDB(email, userId, role, password);
+  createUserInDB(email, userId, role, false, password);
 };
 
 const registerWithEmailAndPassword = async (
