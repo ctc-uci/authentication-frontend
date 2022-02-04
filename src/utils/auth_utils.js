@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -67,16 +68,18 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
 const createUserInFirebase = async (email, password) => {
   const user = await createUserWithEmailAndPassword(auth, email, password);
   sendEmailVerification(user.user);
+  return user.user.uid;
 };
 
-const createUserInDB = async userObject => {
+const createUserInDB = async (email, userId, role, password) => {
   try {
     // Replace line below with call to NPO DB
-    // const res = await WMKBackend.post('/register/create', userObject);
-    // return res;
+    const NPOBackend = axios.create({
+      baseURL: 'http://localhost:3001',
+      withCredentials: true,
+    });
+    await NPOBackend.post('/users/create', { email, userId, role });
   } catch (err) {
-    const { email, password } = userObject;
-
     // Since this route is called after user is created in firebase, if this
     // route errors out, that means we have to discard the created firebase object
     await signInWithEmailAndPassword(auth, email, password);
@@ -87,13 +90,14 @@ const createUserInDB = async userObject => {
   }
 };
 
-const createUser = async (email, password) => {
-  await createUserInFirebase(email, password);
-  createUserInDB({ email, password });
+const createUser = async (email, role, password) => {
+  const userId = await createUserInFirebase(email, password);
+  createUserInDB(email, userId, role, password);
 };
 
 const registerWithEmailAndPassword = async (
   email,
+  role,
   password,
   checkPassword,
   navigate,
@@ -102,7 +106,7 @@ const registerWithEmailAndPassword = async (
   if (password !== checkPassword) {
     throw new Error("Passwords don't match");
   }
-  await createUser(email, password);
+  await createUser(email, role, password);
   navigate(redirectPath);
 };
 
