@@ -40,7 +40,7 @@ const NPOBackend = axios.create({
 });
 
 const addRoleToCookies = async cookies => {
-  const user = await NPOBackend.get(`/users/${auth.currentUser.email}`);
+  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
   cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
 };
 
@@ -96,13 +96,13 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
 
 const createUserInFirebase = async (email, password) => {
   const user = await createUserWithEmailAndPassword(auth, email, password);
-  sendEmailVerification(user.user);
-  return user.user.uid;
+  return user.user;
 };
 
 const createUser = async (email, role, password) => {
-  const userId = await createUserInFirebase(email, password);
-  createUserInDB(email, userId, role, false, password);
+  const user = await createUserInFirebase(email, password);
+  createUserInDB(email, user.uid, role, false, password);
+  sendEmailVerification(user);
 };
 
 const registerWithEmailAndPassword = async (
