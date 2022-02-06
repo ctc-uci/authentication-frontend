@@ -121,6 +121,19 @@ const logout = async (redirectPath, navigate, cookies) => {
   navigate(redirectPath);
 };
 
+/**
+ * Returns the current user synchronously
+ * @param {Auth} authInstance
+ * @returns The current user (or undefined)
+ */
+const getCurrentUser = authInstance =>
+  new Promise((resolve, reject) => {
+    const unsubscribe = authInstance.onAuthStateChanged(user => {
+      unsubscribe();
+      resolve(user);
+    }, reject);
+  });
+
 export {
   auth,
   useNavigate,
@@ -129,4 +142,5 @@ export {
   registerWithEmailAndPassword,
   sendPasswordReset,
   logout,
+  getCurrentUser,
 };
