@@ -18,7 +18,7 @@ function App() {
             exact
             path="/logout"
             element={
-              <ProtectedRoute redirectPath="/">
+              <ProtectedRoute redirectPath="/" roles={['admin']}>
                 <Logout />
               </ProtectedRoute>
             }
