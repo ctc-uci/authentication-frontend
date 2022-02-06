@@ -11,15 +11,29 @@ import { auth } from './auth_utils';
 // };
 
 /**
+ * Returns the current user synchronously
+ * @param {Auth} authInstance
+ * @returns The current user (or undefined)
+ */
+const getCurrentUser = authInstance =>
+  new Promise((resolve, reject) => {
+    const unsubscribe = authInstance.onAuthStateChanged(user => {
+      unsubscribe();
+      resolve(user);
+    }, reject);
+  });
+/**
  * Protects a route from unauthenticated users
  * @param {Component} children The component the user is trying to access
- * @param {Cookies} cookies The user's current cookies
  * @param {string} redirectPath The path to redirect the user to if they're not logged in
+ * @param {Array} roles A list of roles that are allowed to access the route
+ * @param {Cookies} cookies The user's current cookies
  * @returns The relevant path to redirect the user to dependending on authentication state.
  */
 const ProtectedRoute = ({ children, redirectPath, roles, cookies }) => {
-  if (auth.currentUser && roles.includes(cookies.get(cookieKeys.ROLE))) {
-    // TODO: Get user roles from cookies for additional verification
+  const currentUser = getCurrentUser(auth);
+  if (currentUser && roles.includes(cookies.get(cookieKeys.ROLE))) {
+    // console.log(roles.includes(cookies.get(cookieKeys.ROLE)));
     return children;
   }
   return <Navigate to={redirectPath} />;
