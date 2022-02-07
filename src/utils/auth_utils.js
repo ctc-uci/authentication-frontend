@@ -8,6 +8,7 @@ import {
   getAdditionalUserInfo,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
@@ -106,8 +107,17 @@ const registerWithEmailAndPassword = async (
   navigate(redirectPath);
 };
 
-const sendPasswordReset = async () => {
-  // TODO
+/**
+ * Sends a password reset email given an email
+ * @param {string} email The email to resend password to
+ */
+const sendPasswordReset = async email => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    console.log('Password Reset email sent!');
+  } catch (err) {
+    console.log(err.message);
+  }
 };
 
 /**

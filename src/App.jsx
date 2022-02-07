@@ -6,6 +6,7 @@ import Register from './components/register/register';
 
 import Login from './components/Login';
 import Logout from './components/Logout';
+import ForgotPassword from './components/ForgotPassword';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route exact path="/" element={<Login />} />
           <Route exact path="/logout" element={<Logout />} />
           <Route exact path="/register" element={<Register />} />
+          <Route exact path="/forgotpassword" element={<ForgotPassword />} />
         </Routes>
       </Router>
     </CookiesProvider>
