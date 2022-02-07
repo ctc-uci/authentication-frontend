@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -33,6 +34,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+const NPOBackend = axios.create({
+  baseURL: 'http://localhost:3001', // Replace baseURL with NPO-specific URL
+  withCredentials: true,
+});
+
+const addRoleToCookies = async cookies => {
+  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
+};
+
+const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
+  try {
+    await NPOBackend.post('/users/create', { email, userId, role });
+  } catch (err) {
+    // Since this route is called after user is created in firebase, if this
+    // route errors out, that means we have to discard the created firebase object
+    if (!signUpWithGoogle) {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+    const userToBeTerminated = await auth.currentUser;
+    userToBeTerminated.delete();
+
+    throw new Error(err.message);
+  }
+};
+
 /**
  * Signs a user in with Google using Firebase
  * @returns A boolean indicating whether or not the user is new
@@ -42,11 +69,13 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   const userCredential = await signInWithPopup(auth, provider);
   const newUser = getAdditionalUserInfo(userCredential).isNewUser;
   if (newUser) {
+    await createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
     navigate(newUserRedirectPath);
   } else {
     navigate(defaultRedirectPath);
   }
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  addRoleToCookies(cookies);
 };
 
 /**
@@ -62,38 +91,23 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
   await signInWithEmailAndPassword(auth, email, password);
   navigate(redirectPath);
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  addRoleToCookies(cookies);
 };
 
 const createUserInFirebase = async (email, password) => {
   const user = await createUserWithEmailAndPassword(auth, email, password);
-  sendEmailVerification(user.user);
+  return user.user;
 };
 
-const createUserInDB = async userObject => {
-  try {
-    // Replace line below with call to NPO DB
-    // const res = await WMKBackend.post('/register/create', userObject);
-    // return res;
-  } catch (err) {
-    const { email, password } = userObject;
-
-    // Since this route is called after user is created in firebase, if this
-    // route errors out, that means we have to discard the created firebase object
-    await signInWithEmailAndPassword(auth, email, password);
-    const userToBeTerminated = await auth.currentUser;
-    userToBeTerminated.delete();
-
-    throw new Error(err.message);
-  }
-};
-
-const createUser = async (email, password) => {
-  await createUserInFirebase(email, password);
-  createUserInDB({ email, password });
+const createUser = async (email, role, password) => {
+  const user = await createUserInFirebase(email, password);
+  createUserInDB(email, user.uid, role, false, password);
+  sendEmailVerification(user);
 };
 
 const registerWithEmailAndPassword = async (
   email,
+  role,
   password,
   checkPassword,
   navigate,
@@ -102,7 +116,7 @@ const registerWithEmailAndPassword = async (
   if (password !== checkPassword) {
     throw new Error("Passwords don't match");
   }
-  await createUser(email, password);
+  await createUser(email, role, password);
   navigate(redirectPath);
 };
 

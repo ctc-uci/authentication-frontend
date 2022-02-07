@@ -7,12 +7,13 @@ const Register = () => {
   const [password, setPassword] = useState();
   const [checkPassword, setCheckPassword] = useState();
   const [errorMessage, setErrorMessage] = useState();
+  const [role, setRole] = useState();
   const navigate = useNavigate();
 
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      await registerWithEmailAndPassword(email, password, checkPassword, navigate, '/');
+      await registerWithEmailAndPassword(email, role, password, checkPassword, navigate, '/');
     } catch (error) {
       setErrorMessage(error.message);
     }
@@ -23,6 +24,8 @@ const Register = () => {
       <h2>Register</h2>
       <form onSubmit={handleSubmit}>
         <input type="text" onChange={({ target }) => setEmail(target.value)} placeholder="Email" />
+        <br />
+        <input onChange={({ target }) => setRole(target.value)} placeholder="Role" />
         <br />
         <input
           onChange={({ target }) => setPassword(target.value)}
