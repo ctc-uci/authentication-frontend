@@ -17,7 +17,14 @@ function App() {
           <Route
             exact
             path="/logout"
-            element={<ProtectedRoute Component={Logout} redirectPath="/" roles={['admin']} />}
+            element={
+              <ProtectedRoute Component={Logout} redirectPath="/" roles={['admin', 'General']} />
+            }
+          />
+          <Route
+            exact
+            path="admin"
+            element={<ProtectedRoute Component={Logout} redirectPath="/logout" roles={['admin']} />}
           />
           <Route exact path="/register" element={<Register />} />
         </Routes>

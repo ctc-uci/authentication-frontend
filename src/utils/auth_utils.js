@@ -68,14 +68,15 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   const provider = new GoogleAuthProvider();
   const userCredential = await signInWithPopup(auth, provider);
   const newUser = getAdditionalUserInfo(userCredential).isNewUser;
+  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   if (newUser) {
     await createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
+    await addRoleToCookies(cookies);
     navigate(newUserRedirectPath);
   } else {
+    await addRoleToCookies(cookies);
     navigate(defaultRedirectPath);
   }
-  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  addRoleToCookies(cookies);
 };
 
 /**
@@ -89,9 +90,9 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
  */
 const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
   await signInWithEmailAndPassword(auth, email, password);
-  navigate(redirectPath);
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  addRoleToCookies(cookies);
+  await addRoleToCookies(cookies);
+  navigate(redirectPath);
 };
 
 const createUserInFirebase = async (email, password) => {
