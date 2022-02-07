@@ -18,16 +18,16 @@ import { auth, getCurrentUser } from './auth_utils';
  * @param {Cookies} cookies The user's current cookies
  * @returns The relevant path to redirect the user to dependending on authentication state.
  */
-const ProtectedRoute = ({ children, redirectPath, roles, cookies }) => {
+const ProtectedRoute = ({ Component, redirectPath, roles, cookies }) => {
   const currentUser = getCurrentUser(auth);
   if (currentUser && roles.includes(cookies.get(cookieKeys.ROLE))) {
-    return children;
+    return <Component />;
   }
   return <Navigate to={redirectPath} />;
 };
 
 ProtectedRoute.propTypes = {
-  children: PropTypes.element.isRequired,
+  Component: PropTypes.elementType.isRequired,
   redirectPath: PropTypes.string.isRequired,
   roles: PropTypes.arrayOf(PropTypes.string).isRequired,
   cookies: instanceOf(Cookies).isRequired,
