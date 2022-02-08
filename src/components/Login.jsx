@@ -45,13 +45,19 @@ const Login = ({ cookies }) => {
       <form onSubmit={handleSubmit}>
         <input type="text" onChange={({ target }) => setEmail(target.value)} placeholder="Email" />
         <br />
-        <input onChange={({ target }) => setPassword(target.value)} placeholder="Password" />
+        <input
+          type="password"
+          onChange={({ target }) => setPassword(target.value)}
+          placeholder="Password"
+        />
         <br />
         <button type="submit">Sign in</button>
       </form>
       <button type="submit" onClick={handleGoogleSignIn}>
         Sign in with Google
       </button>
+      <br />
+      <a href="/forgotpassword">Forgot Password</a>
     </div>
   );
 };

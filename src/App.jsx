@@ -4,6 +4,7 @@ import { CookiesProvider } from 'react-cookie';
 import './App.css';
 import Register from './components/register/register';
 
+import ForgotPassword from './components/ForgotPassword';
 import Login from './components/Login';
 import Logout from './components/Logout';
 import ProtectedRoute from './utils/ProtectedRoute';
@@ -16,15 +17,16 @@ function App() {
           <Route exact path="/" element={<Login />} />
           <Route
             exact
+            path="admin"
+            element={<ProtectedRoute Component={Logout} redirectPath="/logout" roles={['admin']} />}
+          />
+          <Route exact path="/forgotpassword" element={<ForgotPassword />} />
+          <Route
+            exact
             path="/logout"
             element={
               <ProtectedRoute Component={Logout} redirectPath="/" roles={['admin', 'General']} />
             }
-          />
-          <Route
-            exact
-            path="admin"
-            element={<ProtectedRoute Component={Logout} redirectPath="/logout" roles={['admin']} />}
           />
           <Route exact path="/register" element={<Register />} />
         </Routes>
