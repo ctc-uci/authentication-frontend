@@ -13,10 +13,10 @@ function App() {
     <CookiesProvider>
       <Router>
         <Routes>
+          <Route exact path="/forgotpassword" element={<ForgotPassword />} />
           <Route exact path="/" element={<Login />} />
           <Route exact path="/logout" element={<Logout />} />
           <Route exact path="/register" element={<Register />} />
-          <Route exact path="/forgotpassword" element={<ForgotPassword />} />
         </Routes>
       </Router>
     </CookiesProvider>
