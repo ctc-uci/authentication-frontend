@@ -112,12 +112,7 @@ const registerWithEmailAndPassword = async (
  * @param {string} email The email to resend password to
  */
 const sendPasswordReset = async email => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-    console.log('Password Reset email sent!');
-  } catch (err) {
-    console.log(err.message);
-  }
+  await sendPasswordResetEmail(auth, email);
 };
 
 /**
