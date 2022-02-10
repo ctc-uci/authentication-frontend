@@ -131,6 +131,18 @@ const sendPasswordReset = async email => {
 };
 
 /**
+ * Sends password reset to new account created with stated email
+ * @param {string} email The email to create an account with
+ */
+const sendInviteLink = async (email, role) => {
+  // generate a random password (not going to be used as new account will reset password)
+  const randomPassword = Math.random().toString(36).slice(-8);
+  const user = await createUserInFirebase(email, randomPassword);
+  createUserInDB(email, user.uid, role, false, randomPassword);
+  sendPasswordReset(email);
+};
+
+/**
  * Logs a user out
  * @param {string} redirectPath The path to redirect the user to after logging out
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
@@ -163,4 +175,5 @@ export {
   sendPasswordReset,
   logout,
   getCurrentUser,
+  sendInviteLink,
 };

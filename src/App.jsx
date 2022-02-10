@@ -2,12 +2,13 @@ import React from 'react';
 import { Route, Routes, BrowserRouter as Router } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 import './App.css';
-import Register from './components/register/register';
 
+import AdminInvite from './components/AdminInvite';
 import ForgotPassword from './components/ForgotPassword';
 import Login from './components/Login';
 import Logout from './components/Logout';
 import ProtectedRoute from './utils/ProtectedRoute';
+import Register from './components/register/register';
 
 function App() {
   return (
@@ -20,7 +21,12 @@ function App() {
             path="admin"
             element={<ProtectedRoute Component={Logout} redirectPath="/logout" roles={['admin']} />}
           />
-          <Route exact path="/forgotpassword" element={<ForgotPassword />} />
+          <Route
+            exact
+            path="/adminInvite"
+            element={<ProtectedRoute Component={AdminInvite} redirectPath="/" roles={['admin']} />}
+          />
+          <Route exact path="/forgotPassword" element={<ForgotPassword />} />
           <Route
             exact
             path="/logout"
