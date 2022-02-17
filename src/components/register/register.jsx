@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { instanceOf } from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { registerWithEmailAndPassword } from '../../utils/auth_utils';
+import { Cookies, withCookies } from '../../utils/cookie_utils';
+import { registerWithEmailAndPassword, signInWithGoogle } from '../../utils/auth_utils';
 
-const Register = () => {
+const Register = ({ cookies }) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [checkPassword, setCheckPassword] = useState();
@@ -16,6 +18,21 @@ const Register = () => {
       await registerWithEmailAndPassword(email, role, password, checkPassword, navigate, '/');
     } catch (error) {
       setErrorMessage(error.message);
+    }
+  };
+
+  /**
+   * This function handles signing up with Google
+   * If the user logs in and is new, they are directed to a new-user path
+   * If the user logs in and isn't new, they are directed to the dashboard.
+   * If the user fails to log in, they are directed back to the login screen
+   */
+  const handleGoogleSignIn = async e => {
+    try {
+      e.preventDefault();
+      await signInWithGoogle('/new-user', '/logout', navigate, cookies);
+    } catch (err) {
+      setErrorMessage(err.message);
     }
   };
 
@@ -41,7 +58,7 @@ const Register = () => {
         <br />
         <button type="submit">Register</button>
         <div className="login-buttons">
-          <button type="button">
+          <button type="button" onClick={handleGoogleSignIn}>
             <span>Sign Up With Google</span>
           </button>
         </div>
@@ -51,4 +68,8 @@ const Register = () => {
   );
 };
 
-export default Register;
+Register.propTypes = {
+  cookies: instanceOf(Cookies).isRequired,
+};
+
+export default withCookies(Register);
