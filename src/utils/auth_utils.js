@@ -103,7 +103,7 @@ const createUserInFirebase = async (email, password) => {
 
 const createUser = async (email, role, password) => {
   const user = await createUserInFirebase(email, password);
-  createUserInDB(email, user.uid, role, false, password);
+  await createUserInDB(email, user.uid, role, false, password);
   sendEmailVerification(user);
 };
 
