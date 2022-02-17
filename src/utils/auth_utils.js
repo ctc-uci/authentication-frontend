@@ -91,6 +91,12 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
  */
 const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
   await signInWithEmailAndPassword(auth, email, password);
+
+  // Check if the user has verified their email.
+  if (!auth.currentUser.emailVerified) {
+    throw new Error('Please verify your email before logging in.');
+  }
+
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   await addRoleToCookies(cookies);
   navigate(redirectPath);
