@@ -48,7 +48,11 @@ const addRoleToCookies = async cookies => {
 
 const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
   try {
-    await NPOBackend.post('/users/create', { email, userId, role });
+    if (signUpWithGoogle) {
+      await NPOBackend.post('/users/create', { email, userId, role, registered: false });
+    } else {
+      await NPOBackend.post('/users/create', { email, userId, role, registered: true });
+    }
   } catch (err) {
     // Since this route is called after user is created in firebase, if this
     // route errors out, that means we have to discard the created firebase object
@@ -77,8 +81,18 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
     navigate(newUserRedirectPath);
   } else {
     await addRoleToCookies(cookies);
-    navigate(defaultRedirectPath);
+    const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+    if (!user.data.user.registered) {
+      navigate(newUserRedirectPath);
+    } else {
+      navigate(defaultRedirectPath);
+    }
   }
+};
+
+const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
+  await NPOBackend.put(`/users/update/${auth.currentUser.uid}`);
+  navigate(redirectPath);
 };
 
 /**
@@ -92,6 +106,12 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
  */
 const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
   await signInWithEmailAndPassword(auth, email, password);
+
+  // Check if the user has verified their email.
+  if (!auth.currentUser.emailVerified) {
+    throw new Error('Please verify your email before logging in.');
+  }
+
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   await addRoleToCookies(cookies);
   navigate(redirectPath);
@@ -104,7 +124,7 @@ const createUserInFirebase = async (email, password) => {
 
 const createUser = async (email, role, password) => {
   const user = await createUserInFirebase(email, password);
-  createUserInDB(email, user.uid, role, false, password);
+  await createUserInDB(email, user.uid, role, false, password);
   sendEmailVerification(user);
 };
 
@@ -191,4 +211,5 @@ export {
   getCurrentUser,
   sendInviteLink,
   confirmNewPassword,
+  finishGoogleLoginRegistration,
 };

@@ -10,6 +10,7 @@ import Logout from './components/Logout';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Register from './components/register/register';
 import EmailAction from './components/EmailAction';
+import NewUser from './components/NewUser';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             }
           />
           <Route exact path="/register" element={<Register />} />
+          <Route exact path="/new-user" element={<NewUser />} />
         </Routes>
       </Router>
     </CookiesProvider>
