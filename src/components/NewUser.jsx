@@ -8,7 +8,7 @@ const NewUser = () => {
   const handleSubmit = async e => {
     try {
       e.preventDefault();
-      finishGoogleLoginRegistration(navigate);
+      finishGoogleLoginRegistration('/logout', navigate);
     } catch (err) {
       setErrorMessage(err.message);
     }

@@ -89,9 +89,9 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   }
 };
 
-const finishGoogleLoginRegistration = async navigate => {
+const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
   await NPOBackend.put(`/users/update/${auth.currentUser.uid}`);
-  navigate('/');
+  navigate(redirectPath);
 };
 
 /**
