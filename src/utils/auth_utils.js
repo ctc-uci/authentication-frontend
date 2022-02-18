@@ -10,6 +10,7 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  confirmPasswordReset,
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
@@ -143,6 +144,19 @@ const sendInviteLink = async (email, role) => {
 };
 
 /**
+ * Completes the password reset process, given a confirmation code and new password
+ * @param {string} code The confirmation code sent via email to the user
+ * @param {string} newPassowrd The new password
+ * @param {string} checkPassword The re-entered password
+ */
+const confirmNewPassword = async (code, newPassword, checkPassword) => {
+  if (newPassword !== checkPassword) {
+    throw new Error("Passwords don't match");
+  }
+  await confirmPasswordReset(auth, code, newPassword);
+};
+
+/**
  * Logs a user out
  * @param {string} redirectPath The path to redirect the user to after logging out
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
@@ -176,4 +190,5 @@ export {
   logout,
   getCurrentUser,
   sendInviteLink,
+  confirmNewPassword,
 };

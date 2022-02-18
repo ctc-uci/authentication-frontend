@@ -12,6 +12,7 @@ const ForgotPassword = () => {
       setConfirmationMessage(
         'If the email entered is associated with an account, you should receive an email to reset your password shortly.',
       );
+      setErrorMessage('');
       setEmail('');
     } catch (err) {
       setErrorMessage(err.message);

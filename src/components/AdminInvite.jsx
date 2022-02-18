@@ -12,6 +12,7 @@ const AdminInvite = () => {
       e.preventDefault();
       await sendInviteLink(email, role);
       setConfirmationMessage(`A reset password email has been sent to ${email}`);
+      setErrorMessage('');
       setEmail('');
       setRole('');
     } catch (err) {
