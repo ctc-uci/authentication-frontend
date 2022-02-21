@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { instanceOf } from 'prop-types';
+import PropTypes from 'prop-types';
 import { confirmNewPassword } from '../utils/auth_utils';
 
 const ResetPassword = ({ code }) => {
@@ -50,7 +50,7 @@ const ResetPassword = ({ code }) => {
 };
 
 ResetPassword.propTypes = {
-  code: instanceOf(String).isRequired,
+  code: PropTypes.string.isRequired,
 };
 
 export default ResetPassword;

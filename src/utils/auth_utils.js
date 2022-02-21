@@ -11,6 +11,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   confirmPasswordReset,
+  applyActionCode,
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
@@ -177,6 +178,14 @@ const confirmNewPassword = async (code, newPassword, checkPassword) => {
 };
 
 /**
+ * Applies a verification code sent to the user by email or other out-of-band mechanism.
+ * @param {string} code The confirmation code sent via email to the user
+ */
+const confirmVerifyEmail = async code => {
+  await applyActionCode(auth, code);
+};
+
+/**
  * Logs a user out
  * @param {string} redirectPath The path to redirect the user to after logging out
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
@@ -211,5 +220,6 @@ export {
   getCurrentUser,
   sendInviteLink,
   confirmNewPassword,
+  confirmVerifyEmail,
   finishGoogleLoginRegistration,
 };
