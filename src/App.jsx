@@ -9,6 +9,7 @@ import Login from './components/Login';
 import Logout from './components/Logout';
 import ProtectedRoute from './utils/ProtectedRoute';
 import Register from './components/register/register';
+import EmailAction from './components/EmailAction';
 import NewUser from './components/NewUser';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             path="/adminInvite"
             element={<ProtectedRoute Component={AdminInvite} redirectPath="/" roles={['admin']} />}
           />
+          <Route exact path="/emailAction" element={<EmailAction redirectPath="/" />} />
           <Route exact path="/forgotPassword" element={<ForgotPassword />} />
           <Route
             exact
