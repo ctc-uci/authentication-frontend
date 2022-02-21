@@ -28,7 +28,7 @@ function App() {
             path="/adminInvite"
             element={<ProtectedRoute Component={AdminInvite} redirectPath="/" roles={['admin']} />}
           />
-          <Route exact path="/emailAction" element={<EmailAction />} />
+          <Route exact path="/emailAction" element={<EmailAction redirectPath="/" />} />
           <Route exact path="/forgotPassword" element={<ForgotPassword />} />
           <Route
             exact
