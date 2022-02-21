@@ -7,7 +7,6 @@ import { NPOBackend, refreshToken } from './auth_utils';
 // TODO: Make calls to backend to verify user access token
 const userIsAuthenticated = async (roles, cookies) => {
   const accessToken = await refreshToken(cookies);
-  console.log(cookies);
   if (!accessToken) {
     return false;
   }
@@ -26,7 +25,6 @@ const userIsAuthenticated = async (roles, cookies) => {
 const ProtectedRoute = ({ Component, redirectPath, roles, cookies }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // const currentUser = getCurrentUser(auth);
 
   useEffect(async () => {
     const authenticated = await userIsAuthenticated(roles, cookies);

@@ -6,7 +6,7 @@ import { withCookies, Cookies } from 'react-cookie';
  * This is used when setting a cookie
  */
 const cookieConfig = {
-  maxAge: 5,
+  maxAge: 3600,
   path: '/',
   secure: true,
 };

@@ -42,6 +42,7 @@ const NPOBackend = axios.create({
   withCredentials: true,
 });
 
+// Sets a cookie in the browser
 const setCookie = (key, value, config) => {
   let cookie = `${key}=${value}; max-age=${config.maxAge}; path=${config.path}`;
 
@@ -72,7 +73,7 @@ const addRoleToCookies = async cookies => {
   cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
 };
 
-// Refreshes the current user's access token
+// Refreshes the current user's access token by making a request to Firebase
 const refreshToken = async cookies => {
   const currentUser = await getCurrentUser(auth);
   if (currentUser) {
@@ -85,6 +86,7 @@ const refreshToken = async cookies => {
         grant_type: 'refresh_token',
         refresh_token: refreshT,
       });
+      // Sets the appropriate cookies after refreshing access token
       if (cookies !== undefined) {
         cookies.set(cookieKeys.ACCESS_TOKEN, idToken, cookieConfig);
         await addRoleToCookies(cookies);
@@ -95,37 +97,20 @@ const refreshToken = async cookies => {
       }
       return idToken;
     } catch (e) {
-      console.error(e.message);
       return null;
     }
   }
   return null;
 };
 
-NPOBackend.interceptors.request.use(
-  config => {
-    // console.log(`${config.method.toUpperCase()} Request made to ${config.url} with data:`, config.data, config.params);
-    return config;
-  },
-  err => {
-    return err;
-  },
-);
-
-// Add a response interceptor
+// This response interceptor will refresh the user's access token using the refreshToken helper method
 NPOBackend.interceptors.response.use(
   response => {
-    const { status, data, config } = response;
-    console.log(`Response from ${config.url}:`, {
-      code: status,
-      data,
-    });
     return response;
   },
   async error => {
     if (error.response) {
       const { status, data } = error.response;
-      console.log(data);
       switch (status) {
         case 400:
           // check if 400 error was token
@@ -146,8 +131,10 @@ NPOBackend.interceptors.response.use(
                 withCredentials: true,
               });
             } catch (e) {
-              // return (window.location.href = '/');
-              return console.log('error');
+              /**
+               * This returns the next action to perform if there's an error with refreshing the token
+               */
+              return window.location.replace('/');
             }
           } else {
             throw error;
