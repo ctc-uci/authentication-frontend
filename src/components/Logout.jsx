@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { instanceOf } from 'prop-types';
 import { logout, useNavigate } from '../utils/auth_utils';
-import { Cookies, withCookies } from '../utils/cookie_utils';
 
-const Logout = ({ cookies }) => {
+const Logout = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState();
   const handleSubmit = async () => {
     try {
-      await logout('/', navigate, cookies);
+      await logout('/', navigate);
     } catch (err) {
       setErrorMessage(err.message);
     }
@@ -25,8 +23,4 @@ const Logout = ({ cookies }) => {
   );
 };
 
-Logout.propTypes = {
-  cookies: instanceOf(Cookies).isRequired,
-};
-
-export default withCookies(Logout);
+export default Logout;

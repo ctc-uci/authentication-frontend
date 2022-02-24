@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { instanceOf } from 'prop-types';
-import { Cookies, withCookies } from '../utils/cookie_utils';
 import { logInWithEmailAndPassword, signInWithGoogle, useNavigate } from '../utils/auth_utils';
 
-const Login = ({ cookies }) => {
+const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
@@ -17,7 +15,7 @@ const Login = ({ cookies }) => {
   const handleSubmit = async e => {
     try {
       e.preventDefault();
-      await logInWithEmailAndPassword(email, password, '/logout', navigate, cookies);
+      await logInWithEmailAndPassword(email, password, '/logout', navigate);
     } catch (err) {
       setErrorMessage(err.message);
     }
@@ -32,7 +30,7 @@ const Login = ({ cookies }) => {
   const handleGoogleSignIn = async e => {
     try {
       e.preventDefault();
-      await signInWithGoogle('/new-user', '/logout', navigate, cookies);
+      await signInWithGoogle('/new-user', '/logout', navigate);
     } catch (err) {
       setErrorMessage(err.message);
     }
@@ -62,8 +60,4 @@ const Login = ({ cookies }) => {
   );
 };
 
-Login.propTypes = {
-  cookies: instanceOf(Cookies).isRequired,
-};
-
-export default withCookies(Login);
+export default Login;

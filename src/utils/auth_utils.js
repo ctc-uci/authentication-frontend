@@ -14,7 +14,7 @@ import {
   applyActionCode,
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
+import { cookieKeys, cookieConfig, clearCookies, setCookie } from './cookie_utils';
 
 // Other useful imports from 'firebase/auth':
 // - GoogleAuthProvider
@@ -42,9 +42,9 @@ const NPOBackend = axios.create({
   withCredentials: true,
 });
 
-const addRoleToCookies = async cookies => {
+const addRoleToCookies = async () => {
   const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
-  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
+  setCookie(cookieKeys.ROLE, user.data.user.role, cookieConfig);
 };
 
 const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
@@ -71,17 +71,17 @@ const createUserInDB = async (email, userId, role, signUpWithGoogle, password = 
  * Signs a user in with Google using Firebase
  * @returns A boolean indicating whether or not the user is new
  */
-const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, navigate, cookies) => {
+const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, navigate) => {
   const provider = new GoogleAuthProvider();
   const userCredential = await signInWithPopup(auth, provider);
   const newUser = getAdditionalUserInfo(userCredential).isNewUser;
-  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  setCookie(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   if (newUser) {
     await createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
-    await addRoleToCookies(cookies);
+    await addRoleToCookies();
     navigate(newUserRedirectPath);
   } else {
-    await addRoleToCookies(cookies);
+    await addRoleToCookies();
     const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
     if (!user.data.user.registered) {
       navigate(newUserRedirectPath);
@@ -102,10 +102,9 @@ const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
  * @param {string} password The password to log in with
  * @param {string} redirectPath The path to redirect the user to after logging out
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
- * @param {Cookies} cookies The user's cookies to populate
  * @returns A boolean indicating whether or not the log in was successful
  */
-const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
+const logInWithEmailAndPassword = async (email, password, redirectPath, navigate) => {
   await signInWithEmailAndPassword(auth, email, password);
 
   // Check if the user has verified their email.
@@ -113,8 +112,8 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
     throw new Error('Please verify your email before logging in.');
   }
 
-  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  await addRoleToCookies(cookies);
+  setCookie(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  await addRoleToCookies();
   navigate(redirectPath);
 };
 
@@ -190,9 +189,9 @@ const confirmVerifyEmail = async code => {
  * @param {string} redirectPath The path to redirect the user to after logging out
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
  */
-const logout = async (redirectPath, navigate, cookies) => {
+const logout = async (redirectPath, navigate) => {
   await signOut(auth);
-  clearCookies(cookies);
+  clearCookies();
   navigate(redirectPath);
 };
 

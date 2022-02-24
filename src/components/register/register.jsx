@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { instanceOf } from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { Cookies, withCookies } from '../../utils/cookie_utils';
 import { registerWithEmailAndPassword, signInWithGoogle } from '../../utils/auth_utils';
 
-const Register = ({ cookies }) => {
+const Register = () => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [checkPassword, setCheckPassword] = useState();
@@ -30,7 +28,7 @@ const Register = ({ cookies }) => {
   const handleGoogleSignIn = async e => {
     try {
       e.preventDefault();
-      await signInWithGoogle('/new-user', '/logout', navigate, cookies);
+      await signInWithGoogle('/new-user', '/logout', navigate);
     } catch (err) {
       setErrorMessage(err.message);
     }
@@ -68,8 +66,4 @@ const Register = ({ cookies }) => {
   );
 };
 
-Register.propTypes = {
-  cookies: instanceOf(Cookies).isRequired,
-};
-
-export default withCookies(Register);
+export default Register;

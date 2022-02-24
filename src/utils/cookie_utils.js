@@ -1,5 +1,3 @@
-import { withCookies, Cookies } from 'react-cookie';
-
 /**
  * Options for the format of a cookie
  * More information available here: https://www.npmjs.com/package/react-cookie
@@ -21,13 +19,43 @@ const cookieKeys = {
 };
 
 /**
- * Clears all cookies stored during log in
- * @param {Cookies} cookies THe user's current cookies
+ * Gets a cookie value by name if it exists
  */
-const clearCookies = cookies => {
+const getCookie = key => {
+  const cookie = `; ${document.cookie}`.match(`;\\s*${key}\\s*=([^;]+)`);
+  return cookie ? cookie[1] : '';
+};
+
+/**
+ * Sets a cookie in the browser
+ */
+const setCookie = (key, value, config) => {
+  let cookie = `${key}=${value}; max-age=${config.maxAge}; path=${config.path}`;
+
+  if (config.domain) {
+    cookie += `; domain=${config.domain}`;
+  }
+  if (config.secure) {
+    cookie += '; secure';
+  }
+
+  document.cookie = cookie;
+};
+
+/**
+ * Removes a cookie by name
+ */
+const removeCookie = key => {
+  document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
+
+/**
+ * Clears all cookies stored during log in
+ */
+const clearCookies = () => {
   Object.values(cookieKeys).forEach(value => {
-    cookies.remove(value);
+    removeCookie(value);
   });
 };
 
-export { withCookies, Cookies, cookieConfig, cookieKeys, clearCookies };
+export { cookieConfig, cookieKeys, clearCookies, setCookie, getCookie };
