@@ -74,7 +74,7 @@ const addRoleToCookies = async cookies => {
 };
 
 // Refreshes the current user's access token by making a request to Firebase
-const refreshToken = async cookies => {
+const refreshToken = async () => {
   const currentUser = await getCurrentUser(auth);
   if (currentUser) {
     const refreshUrl = `https://securetoken.googleapis.com/v1/token?key=${process.env.REACT_APP_FIREBASE_APIKEY}`;
@@ -87,14 +87,9 @@ const refreshToken = async cookies => {
         refresh_token: refreshT,
       });
       // Sets the appropriate cookies after refreshing access token
-      if (cookies !== undefined) {
-        cookies.set(cookieKeys.ACCESS_TOKEN, idToken, cookieConfig);
-        await addRoleToCookies(cookies);
-      } else {
-        setCookie(cookieKeys.ACCESS_TOKEN, idToken, cookieConfig);
-        const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
-        setCookie(cookieKeys.ROLE, user.data.user.role, cookieConfig);
-      }
+      setCookie(cookieKeys.ACCESS_TOKEN, idToken, cookieConfig);
+      const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+      setCookie(cookieKeys.ROLE, user.data.user.role, cookieConfig);
       return idToken;
     } catch (e) {
       return null;
