@@ -100,7 +100,7 @@ const refreshToken = async () => {
   return null;
 };
 
-const createAxiosResponseInterceptor = axiosInstance => {
+const addAuthInterceptor = axiosInstance => {
   // This response interceptor will refresh the user's access token using the refreshToken helper method
   axiosInstance.interceptors.response.use(
     response => {
@@ -149,6 +149,9 @@ const createAxiosResponseInterceptor = axiosInstance => {
     },
   );
 };
+
+// to be moved where NPOBackend is declared
+addAuthInterceptor(NPOBackend);
 
 const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
   try {
@@ -306,7 +309,7 @@ export {
   signInWithGoogle,
   logInWithEmailAndPassword,
   registerWithEmailAndPassword,
-  createAxiosResponseInterceptor,
+  addAuthInterceptor,
   sendPasswordReset,
   logout,
   refreshToken,
