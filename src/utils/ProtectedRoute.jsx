@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { PropTypes, instanceOf } from 'prop-types';
-import { withCookies, cookieKeys, Cookies } from './cookie_utils';
+import { withCookies, cookieKeys, Cookies, clearCookies } from './cookie_utils';
 import { NPOBackend, refreshToken } from './auth_utils';
 
 // TODO: Make calls to backend to verify user access token
 const userIsAuthenticated = async (roles, cookies) => {
-  const accessToken = await refreshToken(cookies);
-  if (!accessToken) {
+  try {
+    const accessToken = await refreshToken(cookies);
+    if (!accessToken) {
+      return false;
+    }
+    const loggedIn = await NPOBackend.get(`/auth/verifyToken/${accessToken}`);
+    return roles.includes(cookies.get(cookieKeys.ROLE)) && loggedIn.status === 200;
+  } catch (err) {
+    clearCookies(cookies);
     return false;
   }
-  const loggedIn = await NPOBackend.get(`/auth/verifyToken/${accessToken}`);
-  return roles.includes(cookies.get(cookieKeys.ROLE)) && loggedIn.status === 200;
 };
 
 /**
@@ -20,7 +25,7 @@ const userIsAuthenticated = async (roles, cookies) => {
  * @param {string} redirectPath The path to redirect the user to if they're not logged in
  * @param {Array} roles A list of roles that are allowed to access the route
  * @param {Cookies} cookies The user's current cookies
- * @returns The relevant path to redirect the user to dependending on authentication state.
+ * @returns The relevant path to redirect the user to depending on authentication state.
  */
 const ProtectedRoute = ({ Component, redirectPath, roles, cookies }) => {
   const [isLoading, setIsLoading] = useState(true);
