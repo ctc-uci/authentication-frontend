@@ -51,7 +51,7 @@ const setCookie = (key, value, config) => {
   if (config.domain) {
     cookie += `; domain=${config.domain}`;
   }
-  if (cookie.secure) {
+  if (config.secure) {
     cookie += '; secure';
   }
   document.cookie = cookie;
