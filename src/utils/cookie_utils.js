@@ -8,7 +8,7 @@ import { withCookies, Cookies } from 'react-cookie';
 const cookieConfig = {
   maxAge: 3600,
   path: '/',
-  secure: true,
+  secure: true && document.location.protocol === 'https:',
 };
 
 /**
