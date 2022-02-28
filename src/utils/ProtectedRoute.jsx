@@ -36,7 +36,6 @@ const ProtectedRoute = ({ Component, redirectPath, roles, cookies }) => {
     setIsAuthenticated(authenticated);
     setIsLoading(false);
   }, []);
-
   if (isLoading) {
     return <h1>LOADING...</h1>;
   }

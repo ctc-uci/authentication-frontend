@@ -14,7 +14,7 @@ import NewUser from './components/NewUser';
 
 import AUTH_ROLES from './utils/auth_config';
 
-const { ADMIN_ROLE, USER_ROLE } = AUTH_ROLES;
+const { ADMIN_ROLE, USER_ROLE } = AUTH_ROLES.AUTH_ROLES;
 
 function App() {
   return (

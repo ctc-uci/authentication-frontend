@@ -16,6 +16,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
 
+import AUTH_ROLES from './auth_config';
+
+const { USER_ROLE } = AUTH_ROLES.AUTH_ROLES;
+
 // Using Firebase Web version 9
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
@@ -72,15 +76,6 @@ const getCurrentUser = authInstance =>
       },
     );
   });
-
-/**
- * Sends a request to backend to get user's role and adds it to the frontend cookies
- * @param {Cookies} cookies The user's cookies to populate
- */
-const addRoleToCookies = async cookies => {
-  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
-  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
-};
 
 // Refreshes the current user's access token by making a request to Firebase
 const refreshToken = async () => {
@@ -188,7 +183,7 @@ const createUserInDB = async (email, userId, role, signUpWithGoogle, password = 
 };
 
 /**
- * Signs a user in with Google using Firebase
+ * Signs a user in with Google using Firebase. Users are given USER_ROLE by default
  * @param {string} newUserRedirectPath path to redirect new users to after signing in with Google Provider for the first time
  * @param {string} defaultRedirectPath path to redirect users to after signing in with Google Provider
  * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
@@ -201,12 +196,12 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   const newUser = getAdditionalUserInfo(userCredential).isNewUser;
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   if (newUser) {
-    await createUserInDB(auth.currentUser.email, userCredential.user.uid, 'General', true);
-    await addRoleToCookies(cookies);
+    await createUserInDB(auth.currentUser.email, userCredential.user.uid, USER_ROLE, true);
+    cookies.set(cookieKeys.ROLE, USER_ROLE, cookieConfig);
     navigate(newUserRedirectPath);
   } else {
-    await addRoleToCookies(cookies);
     const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+    cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
     if (!user.data.user.registered) {
       navigate(newUserRedirectPath);
     } else {
@@ -244,7 +239,8 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
     throw new Error('Please verify your email before logging in.');
   }
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  await addRoleToCookies(cookies);
+  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
   navigate(redirectPath);
 };
 
