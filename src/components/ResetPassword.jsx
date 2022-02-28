@@ -10,7 +10,10 @@ const ResetPassword = ({ code }) => {
   const handleResetPassword = async e => {
     try {
       e.preventDefault();
-      await confirmNewPassword(code, password, checkPassword);
+      if (password !== checkPassword) {
+        throw new Error("Passwords don't match");
+      }
+      await confirmNewPassword(code, password);
       setConfirmationMessage('Password changed. You can now sign in with your new password.');
       setErrorMessage('');
       setPassword('');

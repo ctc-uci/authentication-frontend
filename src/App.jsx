@@ -12,6 +12,10 @@ import Register from './components/register/register';
 import EmailAction from './components/EmailAction';
 import NewUser from './components/NewUser';
 
+import AUTH_ROLES from './utils/auth_config';
+
+const { ADMIN_ROLE, USER_ROLE } = AUTH_ROLES.AUTH_ROLES;
+
 function App() {
   return (
     <CookiesProvider>
@@ -21,12 +25,16 @@ function App() {
           <Route
             exact
             path="admin"
-            element={<ProtectedRoute Component={Logout} redirectPath="/logout" roles={['admin']} />}
+            element={
+              <ProtectedRoute Component={Logout} redirectPath="/logout" roles={[ADMIN_ROLE]} />
+            }
           />
           <Route
             exact
             path="/adminInvite"
-            element={<ProtectedRoute Component={AdminInvite} redirectPath="/" roles={['admin']} />}
+            element={
+              <ProtectedRoute Component={AdminInvite} redirectPath="/" roles={[ADMIN_ROLE]} />
+            }
           />
           <Route exact path="/emailAction" element={<EmailAction redirectPath="/" />} />
           <Route exact path="/forgotPassword" element={<ForgotPassword />} />
@@ -34,7 +42,7 @@ function App() {
             exact
             path="/logout"
             element={
-              <ProtectedRoute Component={Logout} redirectPath="/" roles={['admin', 'General']} />
+              <ProtectedRoute Component={Logout} redirectPath="/" roles={[ADMIN_ROLE, USER_ROLE]} />
             }
           />
           <Route exact path="/register" element={<Register />} />

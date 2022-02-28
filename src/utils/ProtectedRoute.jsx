@@ -4,7 +4,6 @@ import { PropTypes, instanceOf } from 'prop-types';
 import { withCookies, cookieKeys, Cookies, clearCookies } from './cookie_utils';
 import { NPOBackend, refreshToken } from './auth_utils';
 
-// TODO: Make calls to backend to verify user access token
 const userIsAuthenticated = async (roles, cookies) => {
   try {
     const accessToken = await refreshToken(cookies);
@@ -36,7 +35,6 @@ const ProtectedRoute = ({ Component, redirectPath, roles, cookies }) => {
     setIsAuthenticated(authenticated);
     setIsLoading(false);
   }, []);
-
   if (isLoading) {
     return <h1>LOADING...</h1>;
   }

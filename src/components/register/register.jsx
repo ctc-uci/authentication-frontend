@@ -15,7 +15,10 @@ const Register = ({ cookies }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      await registerWithEmailAndPassword(email, role, password, checkPassword, navigate, '/');
+      if (password !== checkPassword) {
+        throw new Error("Passwords don't match");
+      }
+      await registerWithEmailAndPassword(email, password, role, navigate, '/');
     } catch (error) {
       setErrorMessage(error.message);
     }
