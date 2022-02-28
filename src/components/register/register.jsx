@@ -15,7 +15,7 @@ const Register = ({ cookies }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      await registerWithEmailAndPassword(email, role, password, checkPassword, navigate, '/');
+      await registerWithEmailAndPassword(email, password, role, checkPassword, navigate, '/');
     } catch (error) {
       setErrorMessage(error.message);
     }

@@ -16,12 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cookieKeys, cookieConfig, clearCookies } from './cookie_utils';
 
-// Other useful imports from 'firebase/auth':
-// - GoogleAuthProvider
-// - signInWithPopup
-// - createUserWithEmailAndPassword
-// - sendPasswordResetEmail
-
+// Using Firebase Web version 9
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTHDOMAIN,
@@ -31,20 +26,23 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APPID,
 };
 
-// Adapted from: https://blog.logrocket.com/user-authentication-firebase-react-apps/
-// Using Firebase Web version 9
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// TEMP: Make sure to remove
 const NPOBackend = axios.create({
-  baseURL: 'http://localhost:3001', // Replace baseURL with NPO-specific URL
+  baseURL: 'http://localhost:3001',
   withCredentials: true,
 });
 
 const refreshUrl = `https://securetoken.googleapis.com/v1/token?key=${process.env.REACT_APP_FIREBASE_APIKEY}`;
 
-// Sets a cookie in the browser
+/**
+ * Sets a cookie in the browser
+ * @param {string} key key for the cookie
+ * @param {string} value value for the cookie
+ * @param {cookieConfig} config cookie config to use
+ */
 const setCookie = (key, value, config) => {
   let cookie = `${key}=${value}; max-age=${config.maxAge}; path=${config.path}`;
 
@@ -75,6 +73,10 @@ const getCurrentUser = authInstance =>
     );
   });
 
+/**
+ * Sends a request to backend to get user's role and adds it to the frontend cookies
+ * @param {Cookies} cookies The user's cookies to populate
+ */
 const addRoleToCookies = async cookies => {
   const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
   cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
@@ -100,6 +102,10 @@ const refreshToken = async () => {
   return null;
 };
 
+/**
+ * Adds an axios interceptor for auth to given axiosInstance
+ * @param {AxiosInstance} axiosInstance instance of axios to apply interceptor to
+ */
 const addAuthInterceptor = axiosInstance => {
   // This response interceptor will refresh the user's access token using the refreshToken helper method
   axiosInstance.interceptors.response.use(
@@ -153,6 +159,14 @@ const addAuthInterceptor = axiosInstance => {
 // to be moved where NPOBackend is declared
 addAuthInterceptor(NPOBackend);
 
+/**
+ * Makes requests to add user to NPO DB. Deletes user if Firebase error
+ * @param {string} email
+ * @param {string} userId
+ * @param {string} role
+ * @param {bool} signUpWithGoogle true if user used Google provider to sign in
+ * @param {string} password
+ */
 const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
   try {
     if (signUpWithGoogle) {
@@ -175,6 +189,10 @@ const createUserInDB = async (email, userId, role, signUpWithGoogle, password = 
 
 /**
  * Signs a user in with Google using Firebase
+ * @param {string} newUserRedirectPath path to redirect new users to after signing in with Google Provider for the first time
+ * @param {string} defaultRedirectPath path to redirect users to after signing in with Google Provider
+ * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
+ * @param {Cookies} cookies The user's cookies to populate
  * @returns A boolean indicating whether or not the user is new
  */
 const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, navigate, cookies) => {
@@ -197,6 +215,13 @@ const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, naviga
   }
 };
 
+/**
+ * When a user signs in with Google for the first time, they will need to add additional info
+ * This is called when the user submits the additional information which will lead to the flag
+ * in the backend changed so that user is not new anymore
+ * @param {string} redirectPath path to redirect user
+ * @param {hook} navigate used to redirect the user after submitted
+ */
 const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
   await NPOBackend.put(`/users/update/${auth.currentUser.uid}`);
   navigate(redirectPath);
@@ -218,27 +243,46 @@ const logInWithEmailAndPassword = async (email, password, redirectPath, navigate
   if (!auth.currentUser.emailVerified) {
     throw new Error('Please verify your email before logging in.');
   }
-
   cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
   await addRoleToCookies(cookies);
   navigate(redirectPath);
 };
 
+/**
+ * Creates a user in firebase database
+ * @param {string} email
+ * @param {string} password
+ * @returns A UserCredential object from firebase
+ */
 const createUserInFirebase = async (email, password) => {
   const user = await createUserWithEmailAndPassword(auth, email, password);
   return user.user;
 };
 
-const createUser = async (email, role, password) => {
+/**
+ * Creates a user (both in firebase and database)
+ * @param {string} email
+ * @param {string} password
+ * @param {string} role
+ * @returns A UserCredential object from firebase
+ */
+const createUser = async (email, password, role) => {
   const user = await createUserInFirebase(email, password);
   await createUserInDB(email, user.uid, role, false, password);
   sendEmailVerification(user);
 };
 
+/**
+ * Registers a new user using the email provider
+ * @param {string} email
+ * @param {string} password
+ * @param {string} role
+ * @param {string} checkPassword second password input used to verify user typed correct value
+ */
 const registerWithEmailAndPassword = async (
   email,
-  role,
   password,
+  role,
   checkPassword,
   navigate,
   redirectPath,
@@ -246,7 +290,7 @@ const registerWithEmailAndPassword = async (
   if (password !== checkPassword) {
     throw new Error("Passwords don't match");
   }
-  await createUser(email, role, password);
+  await createUser(email, password, role);
   navigate(redirectPath);
 };
 
