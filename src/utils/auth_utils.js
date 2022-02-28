@@ -49,7 +49,6 @@ const refreshUrl = `https://securetoken.googleapis.com/v1/token?key=${process.en
  */
 const setCookie = (key, value, config) => {
   let cookie = `${key}=${value}; max-age=${config.maxAge}; path=${config.path}`;
-
   if (config.domain) {
     cookie += `; domain=${config.domain}`;
   }
@@ -95,6 +94,179 @@ const refreshToken = async () => {
     return idToken;
   }
   return null;
+};
+
+/**
+ * Makes requests to add user to NPO DB. Deletes user if Firebase error
+ * @param {string} email
+ * @param {string} userId
+ * @param {string} role
+ * @param {bool} signUpWithGoogle true if user used Google provider to sign in
+ * @param {string} password
+ */
+const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
+  try {
+    if (signUpWithGoogle) {
+      await NPOBackend.post('/users/create', { email, userId, role, registered: false });
+    } else {
+      await NPOBackend.post('/users/create', { email, userId, role, registered: true });
+    }
+  } catch (err) {
+    // Since this route is called after user is created in firebase, if this
+    // route errors out, that means we have to discard the created firebase object
+    if (!signUpWithGoogle) {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+    const userToBeTerminated = await auth.currentUser;
+    userToBeTerminated.delete();
+    throw new Error(err.message);
+  }
+};
+
+/**
+ * Signs a user in with Google using Firebase. Users are given USER_ROLE by default
+ * @param {string} newUserRedirectPath path to redirect new users to after signing in with Google Provider for the first time
+ * @param {string} defaultRedirectPath path to redirect users to after signing in with Google Provider
+ * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
+ * @param {Cookies} cookies The user's cookies to populate
+ * @returns A boolean indicating whether or not the user is new
+ */
+const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, navigate, cookies) => {
+  const provider = new GoogleAuthProvider();
+  const userCredential = await signInWithPopup(auth, provider);
+  const newUser = getAdditionalUserInfo(userCredential).isNewUser;
+  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  if (newUser) {
+    await createUserInDB(auth.currentUser.email, userCredential.user.uid, USER_ROLE, true);
+    cookies.set(cookieKeys.ROLE, USER_ROLE, cookieConfig);
+    navigate(newUserRedirectPath);
+  } else {
+    const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+    cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
+    if (!user.data.user.registered) {
+      navigate(newUserRedirectPath);
+    } else {
+      navigate(defaultRedirectPath);
+    }
+  }
+};
+
+/**
+ * When a user signs in with Google for the first time, they will need to add additional info
+ * This is called when the user submits the additional information which will lead to the flag
+ * in the backend changed so that user is not new anymore
+ * @param {string} redirectPath path to redirect user
+ * @param {hook} navigate used to redirect the user after submitted
+ */
+const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
+  await NPOBackend.put(`/users/update/${auth.currentUser.uid}`);
+  navigate(redirectPath);
+};
+
+/**
+ * Logs a user in with email and password
+ * @param {string} email The email to log in with
+ * @param {string} password The password to log in with
+ * @param {string} redirectPath The path to redirect the user to after logging out
+ * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
+ * @param {Cookies} cookies The user's cookies to populate
+ * @returns A boolean indicating whether or not the log in was successful
+ */
+const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
+  await signInWithEmailAndPassword(auth, email, password);
+  // Check if the user has verified their email.
+  if (!auth.currentUser.emailVerified) {
+    throw new Error('Please verify your email before logging in.');
+  }
+  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
+  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
+  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
+  navigate(redirectPath);
+};
+
+/**
+ * Creates a user in firebase database
+ * @param {string} email
+ * @param {string} password
+ * @returns A UserCredential object from firebase
+ */
+const createUserInFirebase = async (email, password) => {
+  const user = await createUserWithEmailAndPassword(auth, email, password);
+  return user.user;
+};
+
+/**
+ * Creates a user (both in firebase and database)
+ * @param {string} email
+ * @param {string} password
+ * @param {string} role
+ * @returns A UserCredential object from firebase
+ */
+const createUser = async (email, password, role) => {
+  const user = await createUserInFirebase(email, password);
+  await createUserInDB(email, user.uid, role, false, password);
+  sendEmailVerification(user);
+};
+
+/**
+ * Registers a new user using the email provider
+ * @param {string} email
+ * @param {string} password
+ * @param {string} role
+ * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
+ * @param {string} redirectPath path to redirect users once logged in
+ */
+const registerWithEmailAndPassword = async (email, password, role, navigate, redirectPath) => {
+  await createUser(email, password, role);
+  navigate(redirectPath);
+};
+
+/**
+ * Sends a password reset email given an email
+ * @param {string} email The email to resend password to
+ */
+const sendPasswordReset = async email => {
+  await sendPasswordResetEmail(auth, email);
+};
+
+/**
+ * Sends password reset to new account created with stated email
+ * @param {string} email The email to create an account with
+ */
+const sendInviteLink = async (email, role) => {
+  // generate a random password (not going to be used as new account will reset password)
+  const randomPassword = Math.random().toString(36).slice(-8);
+  const user = await createUserInFirebase(email, randomPassword);
+  createUserInDB(email, user.uid, role, false, randomPassword);
+  sendPasswordReset(email);
+};
+
+/**
+ * Completes the password reset process, given a confirmation code and new password
+ * @param {string} code The confirmation code sent via email to the user
+ * @param {string} newPassowrd The new password
+ */
+const confirmNewPassword = async (code, newPassword) => {
+  await confirmPasswordReset(auth, code, newPassword);
+};
+
+/**
+ * Applies a verification code sent to the user by email or other out-of-band mechanism.
+ * @param {string} code The confirmation code sent via email to the user
+ */
+const confirmVerifyEmail = async code => {
+  await applyActionCode(auth, code);
+};
+
+/**
+ * Logs a user out
+ * @param {string} redirectPath The path to redirect the user to after logging out
+ * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
+ */
+const logout = async (redirectPath, navigate, cookies) => {
+  await signOut(auth);
+  clearCookies(cookies);
+  navigate(redirectPath);
 };
 
 /**
@@ -153,194 +325,6 @@ const addAuthInterceptor = axiosInstance => {
 
 // to be moved where NPOBackend is declared
 addAuthInterceptor(NPOBackend);
-
-/**
- * Makes requests to add user to NPO DB. Deletes user if Firebase error
- * @param {string} email
- * @param {string} userId
- * @param {string} role
- * @param {bool} signUpWithGoogle true if user used Google provider to sign in
- * @param {string} password
- */
-const createUserInDB = async (email, userId, role, signUpWithGoogle, password = null) => {
-  try {
-    if (signUpWithGoogle) {
-      await NPOBackend.post('/users/create', { email, userId, role, registered: false });
-    } else {
-      await NPOBackend.post('/users/create', { email, userId, role, registered: true });
-    }
-  } catch (err) {
-    // Since this route is called after user is created in firebase, if this
-    // route errors out, that means we have to discard the created firebase object
-    if (!signUpWithGoogle) {
-      await signInWithEmailAndPassword(auth, email, password);
-    }
-    const userToBeTerminated = await auth.currentUser;
-    userToBeTerminated.delete();
-
-    throw new Error(err.message);
-  }
-};
-
-/**
- * Signs a user in with Google using Firebase. Users are given USER_ROLE by default
- * @param {string} newUserRedirectPath path to redirect new users to after signing in with Google Provider for the first time
- * @param {string} defaultRedirectPath path to redirect users to after signing in with Google Provider
- * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
- * @param {Cookies} cookies The user's cookies to populate
- * @returns A boolean indicating whether or not the user is new
- */
-const signInWithGoogle = async (newUserRedirectPath, defaultRedirectPath, navigate, cookies) => {
-  const provider = new GoogleAuthProvider();
-  const userCredential = await signInWithPopup(auth, provider);
-  const newUser = getAdditionalUserInfo(userCredential).isNewUser;
-  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  if (newUser) {
-    await createUserInDB(auth.currentUser.email, userCredential.user.uid, USER_ROLE, true);
-    cookies.set(cookieKeys.ROLE, USER_ROLE, cookieConfig);
-    navigate(newUserRedirectPath);
-  } else {
-    const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
-    cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
-    if (!user.data.user.registered) {
-      navigate(newUserRedirectPath);
-    } else {
-      navigate(defaultRedirectPath);
-    }
-  }
-};
-
-/**
- * When a user signs in with Google for the first time, they will need to add additional info
- * This is called when the user submits the additional information which will lead to the flag
- * in the backend changed so that user is not new anymore
- * @param {string} redirectPath path to redirect user
- * @param {hook} navigate used to redirect the user after submitted
- */
-const finishGoogleLoginRegistration = async (redirectPath, navigate) => {
-  await NPOBackend.put(`/users/update/${auth.currentUser.uid}`);
-  navigate(redirectPath);
-};
-
-/**
- * Logs a user in with email and password
- * @param {string} email The email to log in with
- * @param {string} password The password to log in with
- * @param {string} redirectPath The path to redirect the user to after logging out
- * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
- * @param {Cookies} cookies The user's cookies to populate
- * @returns A boolean indicating whether or not the log in was successful
- */
-const logInWithEmailAndPassword = async (email, password, redirectPath, navigate, cookies) => {
-  await signInWithEmailAndPassword(auth, email, password);
-
-  // Check if the user has verified their email.
-  if (!auth.currentUser.emailVerified) {
-    throw new Error('Please verify your email before logging in.');
-  }
-  cookies.set(cookieKeys.ACCESS_TOKEN, auth.currentUser.accessToken, cookieConfig);
-  const user = await NPOBackend.get(`/users/${auth.currentUser.uid}`);
-  cookies.set(cookieKeys.ROLE, user.data.user.role, cookieConfig);
-  navigate(redirectPath);
-};
-
-/**
- * Creates a user in firebase database
- * @param {string} email
- * @param {string} password
- * @returns A UserCredential object from firebase
- */
-const createUserInFirebase = async (email, password) => {
-  const user = await createUserWithEmailAndPassword(auth, email, password);
-  return user.user;
-};
-
-/**
- * Creates a user (both in firebase and database)
- * @param {string} email
- * @param {string} password
- * @param {string} role
- * @returns A UserCredential object from firebase
- */
-const createUser = async (email, password, role) => {
-  const user = await createUserInFirebase(email, password);
-  await createUserInDB(email, user.uid, role, false, password);
-  sendEmailVerification(user);
-};
-
-/**
- * Registers a new user using the email provider
- * @param {string} email
- * @param {string} password
- * @param {string} role
- * @param {string} checkPassword second password input used to verify user typed correct value
- */
-const registerWithEmailAndPassword = async (
-  email,
-  password,
-  role,
-  checkPassword,
-  navigate,
-  redirectPath,
-) => {
-  if (password !== checkPassword) {
-    throw new Error("Passwords don't match");
-  }
-  await createUser(email, password, role);
-  navigate(redirectPath);
-};
-
-/**
- * Sends a password reset email given an email
- * @param {string} email The email to resend password to
- */
-const sendPasswordReset = async email => {
-  await sendPasswordResetEmail(auth, email);
-};
-
-/**
- * Sends password reset to new account created with stated email
- * @param {string} email The email to create an account with
- */
-const sendInviteLink = async (email, role) => {
-  // generate a random password (not going to be used as new account will reset password)
-  const randomPassword = Math.random().toString(36).slice(-8);
-  const user = await createUserInFirebase(email, randomPassword);
-  createUserInDB(email, user.uid, role, false, randomPassword);
-  sendPasswordReset(email);
-};
-
-/**
- * Completes the password reset process, given a confirmation code and new password
- * @param {string} code The confirmation code sent via email to the user
- * @param {string} newPassowrd The new password
- * @param {string} checkPassword The re-entered password
- */
-const confirmNewPassword = async (code, newPassword, checkPassword) => {
-  if (newPassword !== checkPassword) {
-    throw new Error("Passwords don't match");
-  }
-  await confirmPasswordReset(auth, code, newPassword);
-};
-
-/**
- * Applies a verification code sent to the user by email or other out-of-band mechanism.
- * @param {string} code The confirmation code sent via email to the user
- */
-const confirmVerifyEmail = async code => {
-  await applyActionCode(auth, code);
-};
-
-/**
- * Logs a user out
- * @param {string} redirectPath The path to redirect the user to after logging out
- * @param {hook} navigate An instance of the useNavigate hook from react-router-dom
- */
-const logout = async (redirectPath, navigate, cookies) => {
-  await signOut(auth);
-  clearCookies(cookies);
-  navigate(redirectPath);
-};
 
 export {
   NPOBackend,
